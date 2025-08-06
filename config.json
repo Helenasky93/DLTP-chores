@@ -1,0 +1,58 @@
+{
+  "roommates": [
+    {
+      "name": "Helena",
+      "slackId": "U0992A54X0T"
+    },
+    {
+      "name": "Zo",
+      "slackId": "U0997GWTXUL"
+    },
+    {
+      "name": "Kyle",
+      "slackId": "U0997H3JB44"
+    },
+    {
+      "name": "Jimmy",
+      "slackId": "U0997GV2P5J"
+    },
+    {
+      "name": "Max",
+      "slackId": "U0997H0KM9A"
+    }
+  ],
+  "chores": [
+    {
+      "title": "Take out kitchen trash",
+      "due": {
+        "weekday": 2,
+        "hour": 21,
+        "minute": 0
+      }
+    },
+    {
+      "title": "Vacuum common areas",
+      "due": {
+        "weekday": 4,
+        "hour": 19,
+        "minute": 0
+      }
+    },
+    {
+      "title": "Wipe counters",
+      "due": {
+        "weekday": 6,
+        "hour": 12,
+        "minute": 0
+      }
+    },
+    {
+      "title": "Bins to curb",
+      "due": {
+        "weekday": 1,
+        "hour": 20,
+        "minute": 0
+      }
+    }
+  ]
+}

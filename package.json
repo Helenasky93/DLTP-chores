@@ -1,0 +1,17 @@
+{
+  "name": "chore-bot",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Slack bot that assigns chores fairly each week and schedules DM reminders.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "@slack/bolt": "^3.17.1",
+    "dayjs": "^1.11.11",
+    "dotenv": "^16.4.5",
+    "fs-extra": "^11.2.0",
+    "node-cron": "^3.0.3"
+  }
+}
