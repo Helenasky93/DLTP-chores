@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   chores: [
     {
       title: "empty kitchen trash can",
