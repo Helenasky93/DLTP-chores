@@ -1,4 +1,4 @@
-export default {
+const config = {
   chores: [
     {
       title: "empty kitchen trash can",
@@ -24,3 +24,4 @@ export default {
     }
   ]
 };
+export default config;
