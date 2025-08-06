@@ -1,26 +1,56 @@
 const config = {
   chores: [
     {
-      title: "empty kitchen trash can",
-      due: { weekday: 1, hour: 10 }
+      title: "vacuum downstairs",
+      frequency: "weekly",
+      trigger: "vacuum downstairs"
+    },
+    {
+      title: "vacuum upstairs",
+      frequency: "weekly",
+      trigger: "vacuum upstairs"
+    },
+    {
+      title: "empty kitchen trash can and replace bag",
+      frequency: "as_needed",
+      trigger: "trash is full"
+    },
+    {
+      title: "take out trash bins to the front",
+      frequency: "weekly",
+      trigger: "trash day"
+    },
+    {
+      title: "take in trash bins to the yard",
+      frequency: "weekly",
+      trigger: "bins are back"
     },
     {
       title: "put away dishes from dishwasher",
-      due: { weekday: 3, hour: 20 }
+      frequency: "as_needed",
+      trigger: "dishwasher needs emptying"
     }
   ],
   roommates: [
     {
-      name: "Alice",
-      slackId: "U12345678"
+      name: "Helena",
+      slackId: "Uxxxxxxx1"
     },
     {
-      name: "Bob",
-      slackId: "U23456789"
+      name: "Zo",
+      slackId: "Uxxxxxxx2"
     },
     {
-      name: "Carol",
-      slackId: "U34567890"
+      name: "Jimmy",
+      slackId: "Uxxxxxxx3"
+    },
+    {
+      name: "Kyle",
+      slackId: "Uxxxxxxx4"
+    },
+    {
+      name: "Max",
+      slackId: "Uxxxxxxx5"
     }
   ]
 };
