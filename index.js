@@ -92,7 +92,7 @@ function fairAssign({ roommates, chores }, history, weekStartISO) {
 
   recent.forEach(week => {
     week.assignments.forEach(a => {
-      counts[a.chore] ??= {};
+      if (!counts[a.chore]) counts[a.chore] = {};
       counts[a.chore][a.roommateId] ??= 0;
       counts[a.chore][a.roommateId] += 1;
     });
@@ -164,6 +164,7 @@ async function postWeeklyAndScheduleDMs({ roommates, chores }) {
   await saveHistory(history);
 }
 
+
 app.command('/assignchores', async ({ ack, say }) => {
   await ack();
   try {
@@ -172,6 +173,38 @@ app.command('/assignchores', async ({ ack, say }) => {
     await say('Chores assigned and reminders scheduled for this week ✅');
   } catch (e) {
     await say(`Error: ${e.message}`);
+  }
+});
+
+// Slash command: /chore [chore]
+app.command('/chore', async ({ ack, payload, respond }) => {
+  await ack();
+  const userId = payload.user_id;
+  const text = (payload.text || '').toLowerCase();
+
+  let triggeredChore;
+  if (text.includes('trash')) triggeredChore = 'empty kitchen trash can';
+  else if (text.includes('dishwasher')) triggeredChore = 'put away dishes from dishwasher';
+  else {
+    await respond("Sorry, I didn’t recognize that chore. Try using keywords like 'trash' or 'dishwasher'.");
+    return;
+  }
+
+  try {
+    const cfg = await loadConfig();
+    const availableRoommates = cfg.roommates.map(r => r.slackId);
+    const assignedId = availableRoommates[Math.floor(Math.random() * availableRoommates.length)];
+    const assignedRoommate = cfg.roommates.find(r => r.slackId === assignedId);
+
+    await app.client.chat.postMessage({
+      channel: process.env.CHANNEL_ID,
+      text: `🔔 <@${assignedRoommate.slackId}> you've been assigned to *${triggeredChore}*. Please take care of it soon! 🧹`
+    });
+
+    await respond(`Chore '${triggeredChore}' assigned to <@${assignedRoommate.slackId}>.`);
+  } catch (e) {
+    console.error(e);
+    await respond(`Something went wrong: ${e.message}`);
   }
 });
 
@@ -207,4 +240,8 @@ cron.schedule('0 20 * * 0', async () => {
 (async () => {
   await app.start(process.env.PORT || 3000);
   console.log('ChoreBot running on port', process.env.PORT || 3000, 'TZ', TZ);
+await app.client.chat.postMessage({
+  channel: process.env.CHANNEL_ID,
+  text: '👋 Hello from ChoreBot! Just making sure I’m alive.'
+});
 })();

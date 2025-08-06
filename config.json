@@ -23,23 +23,7 @@
   ],
   "chores": [
     {
-      "title": "Take out kitchen trash",
-      "due": {
-        "weekday": 2,
-        "hour": 21,
-        "minute": 0
-      }
-    },
-    {
-      "title": "Vacuum common areas",
-      "due": {
-        "weekday": 4,
-        "hour": 19,
-        "minute": 0
-      }
-    },
-    {
-      "title": "Wipe counters",
+      "title": "Vacuum downstairs",
       "due": {
         "weekday": 6,
         "hour": 12,
@@ -47,12 +31,49 @@
       }
     },
     {
-      "title": "Bins to curb",
+      "title": "Vacuum upstairs",
+      "due": {
+        "weekday": 6,
+        "hour": 13,
+        "minute": 0
+      }
+    },
+    {
+      "title": "Empty kitchen trash can and replace bag",
+      "due": {
+        "weekday": -1,
+        "hour": -1,
+        "minute": -1
+      }
+    },
+    {
+      "title": "Take out trash bins to the front",
       "due": {
         "weekday": 1,
         "hour": 20,
         "minute": 0
       }
+    },
+    {
+      "title": "Take in trash bins to the yard",
+      "due": {
+        "weekday": 2,
+        "hour": 20,
+        "minute": 0
+      }
+    },
+    {
+      "title": "Put away dishes from dishwasher",
+      "due": {
+        "weekday": -1,
+        "hour": -1,
+        "minute": -1
+      }
     }
   ]
 }
+
+// Note: We will implement a new slash command endpoint in the backend to handle `/chore`.
+// Next steps:
+// 1. Update backend (e.g., index.js or server.js) to listen for `/chore` command.
+// 2. Configure the slash command in Slack app under "Slash Commands".
