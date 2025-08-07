@@ -1,57 +1,24 @@
-const config = {
-  chores: [
-    {
-      title: "vacuum downstairs",
-      frequency: "weekly",
-      trigger: "vacuum downstairs"
-    },
-    {
-      title: "vacuum upstairs",
-      frequency: "weekly",
-      trigger: "vacuum upstairs"
-    },
-    {
-      title: "empty kitchen trash can and replace bag",
-      frequency: "as_needed",
-      trigger: "trash is full"
-    },
-    {
-      title: "take out trash bins to the front",
-      frequency: "weekly",
-      trigger: "trash day"
-    },
-    {
-      title: "take in trash bins to the yard",
-      frequency: "weekly",
-      trigger: "bins are back"
-    },
-    {
-      title: "put away dishes from dishwasher",
-      frequency: "as_needed",
-      trigger: "dishwasher needs emptying"
-    }
-  ],
-  roommates: [
-    {
-      name: "Helena",
-      slackId: "Uxxxxxxx1"
-    },
-    {
-      name: "Zo",
-      slackId: "Uxxxxxxx2"
-    },
-    {
-      name: "Jimmy",
-      slackId: "Uxxxxxxx3"
-    },
-    {
-      name: "Kyle",
-      slackId: "Uxxxxxxx4"
-    },
-    {
-      name: "Max",
-      slackId: "Uxxxxxxx5"
-    }
-  ]
-};
-export default config;
+import express from 'express';
+import config from './config.json' assert { type: 'json' };
+import bodyParser from 'body-parser';
+
+const app = express();
+app.use(bodyParser.json());
+
+// Quick response to Slack to avoid timeout
+app.post('/slack/events', (req, res) => {
+  res.sendStatus(200); // Respond immediately
+  // Later, add logic here to process events
+  console.log('Slack event received:', req.body);
+});
+
+// Root test
+app.get('/', (req, res) => {
+  res.send('ChoreBot is alive!');
+});
+
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+});
