@@ -135,35 +135,11 @@ async function initializeSeedData() {
     }
 
     const seedData = [
+      // Kyle: 3 points total (2 trash + 1 vacuum)
       {
         month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
         assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-01T10:00:00.000Z",
         dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-01T10:30:00.000Z", isShared: false
-      },
-      {
-        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-03T14:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-03T14:15:00.000Z", isShared: false
-      },
-      {
-        month: "2025-M08", week: "2025-W32", chore: "Take out trash bins to the front",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-05T19:30:00.000Z",
-        dueDate: "2025-08-05T20:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-05T19:45:00.000Z", isShared: false
-      },
-      {
-        month: "2025-M08", week: "2025-W32", chore: "Take in trash bins to the yard",
-        assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2025-08-06T19:30:00.000Z",
-        dueDate: "2025-08-06T20:00:00.000Z", completed: true, completedBy: ["U0997GV2P5J", "U0997H0KM9A"], completedDate: "2025-08-06T19:50:00.000Z", isShared: true
-      },
-      {
-        month: "2025-M08", week: "2025-W31", chore: "Vacuum downstairs",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-03T11:30:00.000Z",
-        dueDate: "2025-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-03T11:45:00.000Z", isShared: false
-      },
-      {
-        month: "2025-M08", week: "2025-W31", chore: "Vacuum upstairs",
-        assignedTo: ["U0997GWTXUL"], assigneeNames: ["Zo"], date: "2025-08-03T12:30:00.000Z",
-        dueDate: "2025-08-03T13:00:00.000Z", completed: true, completedBy: ["U0997GWTXUL"], completedDate: "2025-08-03T12:45:00.000Z", isShared: false
       },
       {
         month: "2025-M08", week: "2025-W32", chore: "Empty kitchen trash can and replace bag",
@@ -171,10 +147,34 @@ async function initializeSeedData() {
         dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-07T09:30:00.000Z", isShared: false
       },
       {
-        month: "2025-M08", week: "2025-W32", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-07T10:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-07T10:15:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W31", chore: "Vacuum downstairs",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-03T11:30:00.000Z",
+        dueDate: "2025-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-03T11:45:00.000Z", isShared: false
+      },
+      
+      // Jimmy: 1.5 points total (1 trash + 0.5 shared take in bins)
+      {
+        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-03T14:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-03T14:15:00.000Z", isShared: false
+      },
+      {
+        month: "2025-M08", week: "2025-W32", chore: "Take in trash bins to the yard",
+        assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2025-08-06T19:30:00.000Z",
+        dueDate: "2025-08-06T20:00:00.000Z", completed: true, completedBy: ["U0997GV2P5J", "U0997H0KM9A"], completedDate: "2025-08-06T19:50:00.000Z", isShared: true
+      },
+      
+      // Max: 0.5 points total (0.5 shared take in bins)
+      // (Max already included in the shared task above)
+      
+      // Zo: 1 point total (1 vacuum)
+      {
+        month: "2025-M08", week: "2025-W31", chore: "Vacuum upstairs",
+        assignedTo: ["U0997GWTXUL"], assigneeNames: ["Zo"], date: "2025-08-03T12:30:00.000Z",
+        dueDate: "2025-08-03T13:00:00.000Z", completed: true, completedBy: ["U0997GWTXUL"], completedDate: "2025-08-03T12:45:00.000Z", isShared: false
       }
+      
+      // Helena: 0 points (no assignments)
     ];
 
     for (const assignment of seedData) {
