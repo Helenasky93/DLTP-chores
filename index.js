@@ -117,18 +117,21 @@ function findMultipleAssignees(chore, history, numAssignees = 2) {
   return sortedRoommates.slice(0, Math.min(numAssignees, roommates.length));
 }
 
-async function assignChores(isManual = false) {
+async function assignChores(isManual = false, weekOffset = 0) {
   const history = await loadHistory();
   const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentWeek = dayjs().tz(TZ).add(weekOffset, 'week').format('YYYY-[W]WW');
   
-  // Check if already assigned this month
-  const existingAssignments = history.filter(h => h.month === currentMonth && !h.completed);
+  // Check if already assigned this week
+  const existingAssignments = history.filter(h => 
+    h.week === currentWeek && !h.completed
+  );
   if (existingAssignments.length > 0 && !isManual) {
     return existingAssignments;
   }
   
   const assignments = [];
-  const assignedPeopleThisMonth = new Set();
+  const assignedPeopleThisWeek = new Set();
   
   for (const chore of config.chores) {
     // Skip chores that are manually triggered (weekday: -1)
@@ -138,20 +141,21 @@ async function assignChores(isManual = false) {
     
     // Try to avoid giving same person multiple chores in one assignment batch
     let attempts = 0;
-    while (assignedPeopleThisMonth.has(assignee.slackId) && attempts < config.roommates.length) {
+    while (assignedPeopleThisWeek.has(assignee.slackId) && attempts < config.roommates.length) {
       assignee = findNextAssignee(chore, history);
       attempts++;
     }
     
-    assignedPeopleThisMonth.add(assignee.slackId);
+    assignedPeopleThisWeek.add(assignee.slackId);
     
     const assignment = {
       month: currentMonth,
+      week: currentWeek,
       chore: chore.title,
       assignedTo: [assignee.slackId], // Array format for consistency
       assigneeNames: [assignee.name],
       date: dayjs().tz(TZ).toISOString(),
-      dueDate: getNextDueDate(chore.due),
+      dueDate: getNextDueDate(chore.due, weekOffset),
       completed: false,
       completedBy: []
     };
@@ -164,18 +168,20 @@ async function assignChores(isManual = false) {
   return assignments;
 }
 
-function getNextDueDate(due) {
+function getNextDueDate(due, weekOffset = 0) {
   if (due.weekday === -1) return null;
   
   const now = dayjs().tz(TZ);
-  const nextDue = now
+  let targetWeek = now.add(weekOffset, 'week');
+  
+  const nextDue = targetWeek
     .day(due.weekday)
     .hour(due.hour)
     .minute(due.minute)
     .second(0);
   
-  // If it's already past this week's due date, schedule for next week
-  if (nextDue.isBefore(now)) {
+  // If scheduling for current week and it's already past due time, schedule for next week
+  if (weekOffset === 0 && nextDue.isBefore(now)) {
     return nextDue.add(1, 'week').toISOString();
   }
   
@@ -259,7 +265,10 @@ app.command('/chore', async ({ command, ack, respond, client }) => {
       } else if (text === 'assign' || text === '') {
         const assignments = await assignChores(true);
         await postAssignments(assignments, process.env.CHANNEL_ID);
-        await respond('✅ Chores have been reassigned for this month!');
+        await respond('✅ Chores have been reassigned for this week!');
+      } else if (text === 'chart' || text === 'progress') {
+        await postDailyProgressChart();
+        await respond('📊 Progress chart posted!');
       } else {
         await respond('Try: `/chore assign` to reassign chores, or `/chore trash is full` for manual triggers');
       }
@@ -324,11 +333,13 @@ async function handleChoreAssignment(choreType, assignees, triggeredBy, respond)
   }
   
   const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
   const assigneeIds = assignees.map(a => a.slackId);
   const assigneeNames = assignees.map(a => a.name);
   
   const assignment = {
     month: currentMonth,
+    week: currentWeek,
     chore: chore.title,
     assignedTo: assigneeIds,
     assigneeNames: assigneeNames,
@@ -536,11 +547,11 @@ app.message('done', async ({ message, say }) => {
   if (message.channel_type !== 'im') return;
   
   const history = await loadHistory();
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
   
-  // Find user's incomplete assignments this month
+  // Find user's incomplete assignments this week
   const userAssignments = history.filter(h => {
-    if (h.month !== currentMonth || h.completed) return false;
+    if (h.week !== currentWeek || h.completed) return false;
     
     // Handle both legacy single assignee and new multiple assignee format
     if (Array.isArray(h.assignedTo)) {
@@ -551,7 +562,7 @@ app.message('done', async ({ message, say }) => {
   });
   
   if (userAssignments.length === 0) {
-    await say("🤔 I don't see any pending chores assigned to you this month.");
+    await say("🤔 I don't see any pending chores assigned to you this week.");
     return;
   }
   
@@ -603,7 +614,7 @@ app.message('done', async ({ message, say }) => {
             text: assignment.chore
           },
           action_id: `complete_${index}`,
-          value: JSON.stringify({ month: assignment.month, chore: assignment.chore })
+          value: JSON.stringify({ week: assignment.week, chore: assignment.chore })
         }))
       }
     ];
@@ -620,7 +631,7 @@ app.action(/complete_\d+/, async ({ body, ack, say }) => {
   const history = await loadHistory();
   
   const assignment = history.find(h => {
-    if (h.month !== value.month || h.chore !== value.chore || h.completed) return false;
+    if (h.week !== value.week || h.chore !== value.chore || h.completed) return false;
     
     // Handle both legacy and new format
     if (Array.isArray(h.assignedTo)) {
@@ -660,19 +671,174 @@ app.action(/complete_\d+/, async ({ body, ack, say }) => {
   }
 });
 
-// Monthly assignment cron job - 1st of each month at 8:00 PM PT
-cron.schedule('0 20 1 * *', async () => {
+// Weekly assignment cron job - Every Monday at 8:00 PM PT
+cron.schedule('0 20 * * 1', async () => {
   try {
-    console.log('Running monthly chore assignment...');
+    console.log('Running weekly chore assignment...');
     const assignments = await assignChores();
     await postAssignments(assignments, process.env.CHANNEL_ID);
-    console.log('Monthly assignments posted!');
+    console.log('Weekly assignments posted!');
   } catch (error) {
-    console.error('Error in monthly assignment cron:', error);
+    console.error('Error in weekly assignment cron:', error);
   }
 }, {
   timezone: TZ
 });
+
+// Monthly reset notification - 1st of each month at 9:00 AM PT
+cron.schedule('0 9 1 * *', async () => {
+  try {
+    console.log('New month - resetting monthly tracking...');
+    
+    const blocks = [
+      {
+        type: 'header',
+        text: {
+          type: 'plain_text',
+          text: '🗓️ New Month Started!'
+        }
+      },
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: 'Monthly chore tracking has been reset. Everyone starts fresh! 💪'
+        }
+      }
+    ];
+    
+    await app.client.chat.postMessage({
+      token: process.env.SLACK_BOT_TOKEN,
+      channel: process.env.CHANNEL_ID,
+      blocks: blocks
+    });
+    
+    console.log('Monthly reset notification posted!');
+  } catch (error) {
+    console.error('Error in monthly reset cron:', error);
+  }
+}, {
+  timezone: TZ
+});
+
+// Daily progress chart - Every day at 10:00 AM PT
+cron.schedule('0 10 * * *', async () => {
+  try {
+    console.log('Posting daily progress chart...');
+    await postDailyProgressChart();
+    console.log('Daily progress chart posted!');
+  } catch (error) {
+    console.error('Error in daily progress chart cron:', error);
+  }
+}, {
+  timezone: TZ
+});
+
+async function postDailyProgressChart() {
+  const history = await loadHistory();
+  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const monthName = dayjs().tz(TZ).format('MMMM YYYY');
+  
+  // Get all assignments for current month
+  const monthHistory = history.filter(h => h.month === currentMonth);
+  
+  // Calculate stats for each roommate
+  const stats = {};
+  config.roommates.forEach(roommate => {
+    stats[roommate.slackId] = {
+      name: roommate.name,
+      total: 0,
+      completed: 0,
+      pending: 0,
+      completedChores: []
+    };
+  });
+  
+  monthHistory.forEach(h => {
+    const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    assigneeIds.forEach(assigneeId => {
+      if (stats[assigneeId]) {
+        stats[assigneeId].total++;
+        if (h.completed) {
+          stats[assigneeId].completed++;
+          stats[assigneeId].completedChores.push(h.chore);
+        } else {
+          stats[assigneeId].pending++;
+        }
+      }
+    });
+  });
+  
+  // Create progress chart blocks
+  const blocks = [
+    {
+      type: 'header',
+      text: {
+        type: 'plain_text',
+        text: `📊 ${monthName} Chore Progress`
+      }
+    },
+    {
+      type: 'divider'
+    }
+  ];
+  
+  // Sort roommates by completion rate
+  const sortedRoommates = Object.values(stats).sort((a, b) => {
+    const aRate = a.total > 0 ? a.completed / a.total : 0;
+    const bRate = b.total > 0 ? b.completed / b.total : 0;
+    return bRate - aRate;
+  });
+  
+  sortedRoommates.forEach((stat, index) => {
+    const completionRate = stat.total > 0 ? Math.round((stat.completed / stat.total) * 100) : 0;
+    const progressBar = createProgressBar(completionRate);
+    const medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
+    
+    let choreList = '';
+    if (stat.completedChores.length > 0) {
+      choreList = `\\n✅ ${stat.completedChores.slice(0, 3).join(', ')}`;
+      if (stat.completedChores.length > 3) {
+        choreList += ` +${stat.completedChores.length - 3} more`;
+      }
+    }
+    
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `${medal}*${stat.name}*\\n${progressBar} ${completionRate}% (${stat.completed}/${stat.total})${choreList}`
+      }
+    });
+  });
+  
+  blocks.push(
+    {
+      type: 'divider'
+    },
+    {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: `📅 Updated: ${dayjs().tz(TZ).format('MMM D, YYYY at h:mm A')}`
+        }
+      ]
+    }
+  );
+  
+  await app.client.chat.postMessage({
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: process.env.CHANNEL_ID,
+    blocks: blocks
+  });
+}
+
+function createProgressBar(percentage, length = 10) {
+  const filled = Math.round((percentage / 100) * length);
+  const empty = length - filled;
+  return '█'.repeat(filled) + '░'.repeat(empty);
+}
 
 // DM reminder system - check every hour
 cron.schedule('0 * * * *', async () => {
@@ -736,6 +902,31 @@ app.error((error) => {
   console.error('Slack app error:', error);
 });
 
+// Initialize this week's assignments (since it's mid-week)
+async function initializeThisWeek() {
+  try {
+    const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
+    const history = await loadHistory();
+    
+    // Check if this week already has assignments
+    const existingAssignments = history.filter(h => h.week === currentWeek);
+    
+    if (existingAssignments.length === 0) {
+      console.log('No assignments for this week - creating them now...');
+      const assignments = await assignChores(false);
+      
+      if (assignments.length > 0) {
+        await postAssignments(assignments, process.env.CHANNEL_ID);
+        console.log('✅ This week\'s assignments have been posted!');
+      }
+    } else {
+      console.log(`This week already has ${existingAssignments.length} assignments.`);
+    }
+  } catch (error) {
+    console.error('Error initializing this week:', error);
+  }
+}
+
 // Start the app
 (async () => {
   await loadConfig();
@@ -747,4 +938,9 @@ app.error((error) => {
   console.log(`Timezone: ${TZ}`);
   console.log(`Channel ID: ${process.env.CHANNEL_ID}`);
   console.log(`Roommates: ${config.roommates.map(r => r.name).join(', ')}`);
+  
+  // Initialize this week's assignments
+  setTimeout(async () => {
+    await initializeThisWeek();
+  }, 2000); // Wait 2 seconds for everything to be ready
 })();

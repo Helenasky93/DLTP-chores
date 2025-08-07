@@ -1,6 +1,7 @@
 [
   {
     "month": "2024-M08",
+    "week": "2024-W31",
     "chore": "Empty kitchen trash can and replace bag",
     "assignedTo": ["U0997H3JB44"],
     "assigneeNames": ["Kyle"],
@@ -12,6 +13,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W31",
     "chore": "Empty kitchen trash can and replace bag",
     "assignedTo": ["U0997GV2P5J"],
     "assigneeNames": ["Jimmy"],
@@ -23,6 +25,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W32",
     "chore": "Take out trash bins to the front",
     "assignedTo": ["U0997H3JB44"],
     "assigneeNames": ["Kyle"],
@@ -34,6 +37,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W32",
     "chore": "Take in trash bins to the yard",
     "assignedTo": ["U0997GV2P5J"],
     "assigneeNames": ["Jimmy"],
@@ -45,6 +49,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W31",
     "chore": "Take in trash bins to the yard",
     "assignedTo": ["U0997H0KM9A"],
     "assigneeNames": ["Max"],
@@ -56,6 +61,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W31",
     "chore": "Vacuum downstairs",
     "assignedTo": ["U0997H3JB44"],
     "assigneeNames": ["Kyle"],
@@ -67,6 +73,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W31",
     "chore": "Vacuum upstairs",
     "assignedTo": ["U0997H3JB44"],
     "assigneeNames": ["Kyle"],
@@ -78,6 +85,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W32",
     "chore": "Vacuum downstairs",
     "assignedTo": ["U0997GWTXUL"],
     "assigneeNames": ["Zo"],
@@ -89,6 +97,7 @@
   },
   {
     "month": "2024-M08",
+    "week": "2024-W32",
     "chore": "Vacuum upstairs",
     "assignedTo": ["U0997GWTXUL"],
     "assigneeNames": ["Zo"],
