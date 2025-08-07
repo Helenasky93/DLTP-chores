@@ -136,44 +136,44 @@ async function initializeSeedData() {
 
     const seedData = [
       {
-        month: "2024-M08", week: "2024-W31", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-01T10:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-01T10:30:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-01T10:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-01T10:30:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W31", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2024-08-03T14:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2024-08-03T14:15:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-03T14:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-03T14:15:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W32", chore: "Take out trash bins to the front",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-05T19:30:00.000Z",
-        dueDate: "2024-08-05T20:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-05T19:45:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W32", chore: "Take out trash bins to the front",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-05T19:30:00.000Z",
+        dueDate: "2025-08-05T20:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-05T19:45:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W32", chore: "Take in trash bins to the yard",
-        assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2024-08-06T19:30:00.000Z",
-        dueDate: "2024-08-06T20:00:00.000Z", completed: true, completedBy: ["U0997GV2P5J", "U0997H0KM9A"], completedDate: "2024-08-06T19:50:00.000Z", isShared: true
+        month: "2025-M08", week: "2025-W32", chore: "Take in trash bins to the yard",
+        assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2025-08-06T19:30:00.000Z",
+        dueDate: "2025-08-06T20:00:00.000Z", completed: true, completedBy: ["U0997GV2P5J", "U0997H0KM9A"], completedDate: "2025-08-06T19:50:00.000Z", isShared: true
       },
       {
-        month: "2024-M08", week: "2024-W31", chore: "Vacuum downstairs",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-03T11:30:00.000Z",
-        dueDate: "2024-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-03T11:45:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W31", chore: "Vacuum downstairs",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-03T11:30:00.000Z",
+        dueDate: "2025-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-03T11:45:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W31", chore: "Vacuum upstairs",
-        assignedTo: ["U0997GWTXUL"], assigneeNames: ["Zo"], date: "2024-08-03T12:30:00.000Z",
-        dueDate: "2024-08-03T13:00:00.000Z", completed: true, completedBy: ["U0997GWTXUL"], completedDate: "2024-08-03T12:45:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W31", chore: "Vacuum upstairs",
+        assignedTo: ["U0997GWTXUL"], assigneeNames: ["Zo"], date: "2025-08-03T12:30:00.000Z",
+        dueDate: "2025-08-03T13:00:00.000Z", completed: true, completedBy: ["U0997GWTXUL"], completedDate: "2025-08-03T12:45:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W32", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-07T09:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-07T09:30:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W32", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-07T09:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-07T09:30:00.000Z", isShared: false
       },
       {
-        month: "2024-M08", week: "2024-W32", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2024-08-07T10:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2024-08-07T10:15:00.000Z", isShared: false
+        month: "2025-M08", week: "2025-W32", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-07T10:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-07T10:15:00.000Z", isShared: false
       }
     ];
 
@@ -247,7 +247,7 @@ async function updateAssignment(id, updates) {
 
 function findNextAssignee(chore, history) {
   const roommates = config.roommates;
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   
   // Get all assignments for current month
   const monthHistory = history.filter(h => h.month === currentMonth);
@@ -278,7 +278,7 @@ function findNextAssignee(chore, history) {
 
 function findMultipleAssignees(chore, history, numAssignees = 2) {
   const roommates = config.roommates;
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   
   // Get all assignments for current month
   const monthHistory = history.filter(h => h.month === currentMonth);
@@ -310,7 +310,7 @@ function findMultipleAssignees(chore, history, numAssignees = 2) {
 
 async function assignChores(isManual = false, weekOffset = 0) {
   const history = await loadHistory();
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   const currentWeek = dayjs().tz(TZ).add(weekOffset, 'week').format('YYYY-[W]WW');
   
   // Check if already assigned this week
@@ -470,8 +470,8 @@ app.command('/chore', async ({ command, ack, respond, client }) => {
         await postDailyProgressChart();
         await respond('📊 Progress chart posted!');
       } else if (text === 'chart august' || text === 'chart aug') {
-        await postSpecificMonthChart('2024-M08');
-        await respond('📊 August 2024 chart posted!');
+        await postSpecificMonthChart('2025-M08');
+        await respond('📊 August 2025 chart posted!');
       } else {
         await respond('Try: `/chore assign` to reassign chores, `/chore chart` to show progress, or `/chore trash is full` for manual triggers');
       }
@@ -535,7 +535,7 @@ async function handleChoreAssignment(choreType, assignees, triggeredBy, respond)
     return;
   }
   
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
   const assigneeIds = assignees.map(a => a.slackId);
   const assigneeNames = assignees.map(a => a.name);
@@ -594,8 +594,8 @@ app.command('/chart', async ({ command, ack, respond }) => {
       const text = command.text.trim().toLowerCase();
       
       if (text === 'august' || text === 'aug') {
-        await postSpecificMonthChart('2024-M08');
-        await respond('📊 August 2024 chart posted!');
+        await postSpecificMonthChart('2025-M08');
+        await respond('📊 August 2025 chart posted!');
       } else {
         await postDailyProgressChart();
         await respond('📊 Progress chart posted!');
@@ -972,9 +972,10 @@ cron.schedule('0 10 * * *', async () => {
 
 async function postSpecificMonthChart(monthFilter) {
   const history = await loadHistory();
-  const monthName = monthFilter === '2024-M08' ? 'August 2024' : 'Current Month';
+  const monthName = monthFilter === '2025-M08' ? 'August 2025' : 'Current Month';
   
   console.log('Filtering for month:', monthFilter);
+  console.log('Total history records loaded:', history.length);
   
   // Get all assignments for specified month
   const monthHistory = history.filter(h => h.month === monthFilter);
@@ -1079,7 +1080,7 @@ async function postSpecificMonthChart(monthFilter) {
 
 async function postDailyProgressChart() {
   const history = await loadHistory();
-  const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
+  const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   const monthName = dayjs().tz(TZ).format('MMMM YYYY');
   
   console.log('Current month filter:', currentMonth);
@@ -1264,10 +1265,10 @@ async function initializeThisWeek() {
     const completedChores = existingAssignments.filter(h => h.completed);
     const scheduledChores = config.chores.filter(c => c.due.weekday !== -1);
     
-    console.log(`Week ${currentWeek} status: ${completedChores.length}/${scheduledChores.length} chores completed`);
+    console.log(`Week ${currentWeek} status: ${existingAssignments.length}/${scheduledChores.length} chores assigned, ${completedChores.length} completed`);
     
-    if (completedChores.length >= scheduledChores.length) {
-      console.log('✅ All scheduled chores for this week are already completed!');
+    if (existingAssignments.length >= scheduledChores.length) {
+      console.log('✅ All scheduled chores for this week are already assigned!');
       return;
     }
     
