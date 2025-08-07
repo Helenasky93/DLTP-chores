@@ -1,4 +1,5 @@
-import { App } from '@slack/bolt';
+import pkg from '@slack/bolt';
+const { App } = pkg;
 import dotenv from 'dotenv';
 import fs from 'fs-extra';
 import cron from 'node-cron';
