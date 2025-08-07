@@ -313,12 +313,26 @@ async function assignChores(isManual = false, weekOffset = 0) {
   const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
   const currentWeek = dayjs().tz(TZ).add(weekOffset, 'week').format('YYYY-[W]WW');
   
-  // Check if already assigned this week
-  const existingAssignments = history.filter(h => 
-    h.week === currentWeek && !h.completed
+  // Get ALL assignments for this week (completed and incomplete)
+  const allWeekAssignments = history.filter(h => h.week === currentWeek);
+  
+  // Get incomplete assignments for early return check
+  const incompleteAssignments = allWeekAssignments.filter(h => !h.completed);
+  if (incompleteAssignments.length > 0 && !isManual) {
+    return incompleteAssignments;
+  }
+  
+  // Get all scheduled chores (not manual ones)
+  const scheduledChores = config.chores.filter(c => c.due.weekday !== -1);
+  
+  // Check if all scheduled chores are already completed
+  const completedScheduledChores = scheduledChores.filter(chore => 
+    allWeekAssignments.some(h => h.chore === chore.title && h.completed)
   );
-  if (existingAssignments.length > 0 && !isManual) {
-    return existingAssignments;
+  
+  if (completedScheduledChores.length >= scheduledChores.length) {
+    console.log('✅ All scheduled chores for this week are already completed!');
+    return [];
   }
   
   const assignments = [];
@@ -329,7 +343,7 @@ async function assignChores(isManual = false, weekOffset = 0) {
     if (chore.due.weekday === -1) continue;
     
     // Check if this chore is already completed this week
-    const alreadyCompletedThisWeek = existingAssignments.find(h => 
+    const alreadyCompletedThisWeek = allWeekAssignments.find(h => 
       h.chore === chore.title && h.completed
     );
     
@@ -1279,7 +1293,44 @@ async function initializeThisWeek() {
       await postAssignments(assignments, process.env.CHANNEL_ID);
       console.log(`✅ Posted ${assignments.length} remaining assignments for this week!`);
     } else {
-      console.log('✅ No additional chore assignments needed this week.');
+      // Check if all scheduled chores are completed for celebration message
+      const completedScheduledChores = scheduledChores.filter(chore => 
+        completedChores.some(h => h.chore === chore.title)
+      );
+      
+      if (completedScheduledChores.length >= scheduledChores.length) {
+        // Post celebratory message
+        const blocks = [
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: '🎉 *All auto assigned tasks have been completed for this week!*'
+            }
+          },
+          {
+            type: 'section',
+            text: {
+              type: 'mrkdwn',
+              text: 'Great job everyone! All scheduled chores for this week are done. 🧹✨'
+            }
+          }
+        ];
+        
+        try {
+          await app.client.chat.postMessage({
+            token: process.env.SLACK_BOT_TOKEN,
+            channel: process.env.CHANNEL_ID,
+            blocks: blocks,
+            text: '🎉 All auto assigned tasks have been completed for this week!'
+          });
+          console.log('✅ Posted celebratory completion message!');
+        } catch (error) {
+          console.error('Error posting celebratory message:', error);
+        }
+      } else {
+        console.log('✅ No additional chore assignments needed this week.');
+      }
     }
   } catch (error) {
     console.error('Error initializing this week:', error);
