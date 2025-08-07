@@ -279,8 +279,11 @@ app.command('/chore', async ({ command, ack, respond, client }) => {
       } else if (text === 'chart' || text === 'progress') {
         await postDailyProgressChart();
         await respond('📊 Progress chart posted!');
+      } else if (text === 'chart august' || text === 'chart aug') {
+        await postSpecificMonthChart('2024-M08');
+        await respond('📊 August 2024 chart posted!');
       } else {
-        await respond('Try: `/chore assign` to reassign chores, or `/chore trash is full` for manual triggers');
+        await respond('Try: `/chore assign` to reassign chores, `/chore chart` to show progress, or `/chore trash is full` for manual triggers');
       }
     } catch (error) {
       console.error('Error handling /chore command:', error);
@@ -744,10 +747,113 @@ cron.schedule('0 10 * * *', async () => {
   timezone: TZ
 });
 
+async function postSpecificMonthChart(monthFilter) {
+  const history = await loadHistory();
+  const monthName = monthFilter === '2024-M08' ? 'August 2024' : 'Current Month';
+  
+  console.log('Filtering for month:', monthFilter);
+  
+  // Get all assignments for specified month
+  const monthHistory = history.filter(h => h.month === monthFilter);
+  
+  console.log('Found history entries:', monthHistory.length);
+  console.log('Sample entries:', monthHistory.slice(0, 2));
+  
+  // Calculate stats for each roommate
+  const stats = {};
+  config.roommates.forEach(roommate => {
+    stats[roommate.slackId] = {
+      name: roommate.name,
+      total: 0,
+      completed: 0,
+      pending: 0,
+      completedChores: []
+    };
+  });
+  
+  monthHistory.forEach(h => {
+    const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    assigneeIds.forEach(assigneeId => {
+      if (stats[assigneeId]) {
+        stats[assigneeId].total++;
+        if (h.completed) {
+          stats[assigneeId].completed++;
+          stats[assigneeId].completedChores.push(h.chore);
+        } else {
+          stats[assigneeId].pending++;
+        }
+      }
+    });
+  });
+  
+  console.log('Final stats:', JSON.stringify(stats, null, 2));
+  
+  // Create progress chart blocks
+  const blocks = [
+    {
+      type: 'header',
+      text: {
+        type: 'plain_text',
+        text: `📊 ${monthName} Chore Progress`
+      }
+    },
+    {
+      type: 'divider'
+    }
+  ];
+  
+  // Sort roommates alphabetically (no competition/ranking)
+  const sortedRoommates = Object.values(stats).sort((a, b) => a.name.localeCompare(b.name));
+  
+  sortedRoommates.forEach((stat) => {
+    const completionRate = stat.total > 0 ? Math.round((stat.completed / stat.total) * 100) : 0;
+    const progressBar = createProgressBar(completionRate);
+    
+    let choreList = '';
+    if (stat.completedChores.length > 0) {
+      choreList = `\\n✅ ${stat.completedChores.join(', ')}`;
+    } else {
+      choreList = '\\n📝 No completed chores yet';
+    }
+    
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${stat.name}*\\n${progressBar} ${stat.completed} completed${choreList}`
+      }
+    });
+  });
+  
+  blocks.push(
+    {
+      type: 'divider'
+    },
+    {
+      type: 'context',
+      elements: [
+        {
+          type: 'mrkdwn',
+          text: `📅 Updated: ${dayjs().tz(TZ).format('MMM D, YYYY at h:mm A')}`
+        }
+      ]
+    }
+  );
+  
+  await app.client.chat.postMessage({
+    token: process.env.SLACK_BOT_TOKEN,
+    channel: process.env.CHANNEL_ID,
+    blocks: blocks
+  });
+}
+
 async function postDailyProgressChart() {
   const history = await loadHistory();
   const currentMonth = dayjs().tz(TZ).format('YYYY-M[MM]');
   const monthName = dayjs().tz(TZ).format('MMMM YYYY');
+  
+  console.log('Current month filter:', currentMonth);
+  console.log('Month name:', monthName);
   
   // Get all assignments for current month
   const monthHistory = history.filter(h => h.month === currentMonth);
@@ -778,6 +884,10 @@ async function postDailyProgressChart() {
       }
     });
   });
+  
+  // Debug logging
+  console.log('Month history count:', monthHistory.length);
+  console.log('Stats:', JSON.stringify(stats, null, 2));
   
   // Create progress chart blocks
   const blocks = [
