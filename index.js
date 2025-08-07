@@ -39,8 +39,152 @@ async function loadHistory() {
     const history = await fs.readJson(DATA_FILE);
     return Array.isArray(history) ? history : [];
   } catch (error) {
-    return [];
+    // File doesn't exist, initialize with seed data
+    console.log('No history file found, initializing with seed data...');
+    await initializeSeedData();
+    return await fs.readJson(DATA_FILE);
   }
+}
+
+async function initializeSeedData() {
+  const seedData = [
+    {
+      "month": "2024-M08",
+      "week": "2024-W31",
+      "chore": "Empty kitchen trash can and replace bag",
+      "assignedTo": ["U0997H3JB44"],
+      "assigneeNames": ["Kyle"],
+      "date": "2024-08-01T10:00:00.000Z",
+      "dueDate": null,
+      "completed": true,
+      "completedBy": ["U0997H3JB44"],
+      "completedDate": "2024-08-01T10:30:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W31",
+      "chore": "Empty kitchen trash can and replace bag",
+      "assignedTo": ["U0997GV2P5J"],
+      "assigneeNames": ["Jimmy"],
+      "date": "2024-08-03T14:00:00.000Z",
+      "dueDate": null,
+      "completed": true,
+      "completedBy": ["U0997GV2P5J"],
+      "completedDate": "2024-08-03T14:15:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Take out trash bins to the front",
+      "assignedTo": ["U0997H3JB44"],
+      "assigneeNames": ["Kyle"],
+      "date": "2024-08-05T19:30:00.000Z",
+      "dueDate": "2024-08-05T20:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997H3JB44"],
+      "completedDate": "2024-08-05T19:45:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Take in trash bins to the yard",
+      "assignedTo": ["U0997GV2P5J"],
+      "assigneeNames": ["Jimmy"],
+      "date": "2024-08-06T19:30:00.000Z",
+      "dueDate": "2024-08-06T20:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997GV2P5J"],
+      "completedDate": "2024-08-06T19:50:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W31",
+      "chore": "Take in trash bins to the yard",
+      "assignedTo": ["U0997H0KM9A"],
+      "assigneeNames": ["Max"],
+      "date": "2024-08-02T19:30:00.000Z",
+      "dueDate": "2024-08-02T20:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997H0KM9A"],
+      "completedDate": "2024-08-02T20:10:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W31",
+      "chore": "Vacuum downstairs",
+      "assignedTo": ["U0997H3JB44"],
+      "assigneeNames": ["Kyle"],
+      "date": "2024-08-03T11:30:00.000Z",
+      "dueDate": "2024-08-03T12:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997H3JB44"],
+      "completedDate": "2024-08-03T11:45:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W31",
+      "chore": "Vacuum upstairs",
+      "assignedTo": ["U0997H3JB44"],
+      "assigneeNames": ["Kyle"],
+      "date": "2024-08-03T12:30:00.000Z",
+      "dueDate": "2024-08-03T13:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997H3JB44"],
+      "completedDate": "2024-08-03T12:45:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Vacuum downstairs",
+      "assignedTo": ["U0997GWTXUL"],
+      "assigneeNames": ["Zo"],
+      "date": "2024-08-06T11:30:00.000Z",
+      "dueDate": "2024-08-06T12:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997GWTXUL"],
+      "completedDate": "2024-08-06T11:50:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Vacuum upstairs",
+      "assignedTo": ["U0997GWTXUL"],
+      "assigneeNames": ["Zo"],
+      "date": "2024-08-06T12:30:00.000Z",
+      "dueDate": "2024-08-06T13:00:00.000Z",
+      "completed": true,
+      "completedBy": ["U0997GWTXUL"],
+      "completedDate": "2024-08-06T12:55:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Empty kitchen trash can and replace bag",
+      "assignedTo": ["U0997H3JB44"],
+      "assigneeNames": ["Kyle"],
+      "date": "2024-08-07T09:00:00.000Z",
+      "dueDate": null,
+      "completed": true,
+      "completedBy": ["U0997H3JB44"],
+      "completedDate": "2024-08-07T09:30:00.000Z"
+    },
+    {
+      "month": "2024-M08",
+      "week": "2024-W32",
+      "chore": "Empty kitchen trash can and replace bag",
+      "assignedTo": ["U0997GV2P5J"],
+      "assigneeNames": ["Jimmy"],
+      "date": "2024-08-07T10:00:00.000Z",
+      "dueDate": null,
+      "completed": true,
+      "completedBy": ["U0997GV2P5J"],
+      "completedDate": "2024-08-07T10:15:00.000Z"
+    }
+  ];
+  
+  await fs.ensureDir('./data');
+  await fs.writeJson(DATA_FILE, seedData, { spaces: 2 });
+  console.log('✅ Seed data initialized with', seedData.length, 'historical entries');
 }
 
 async function saveHistory(history) {
