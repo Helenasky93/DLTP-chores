@@ -72,8 +72,3 @@
     }
   ]
 }
-
-// Note: We will implement a new slash command endpoint in the backend to handle `/chore`.
-// Next steps:
-// 1. Update backend (e.g., index.js or server.js) to listen for `/chore` command.
-// 2. Configure the slash command in Slack app under "Slash Commands".
