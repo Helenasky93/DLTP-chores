@@ -5,7 +5,9 @@
   "description": "Slack bot that assigns chores fairly each week and schedules DM reminders.",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "npm rebuild sqlite3",
+    "postinstall": "npm rebuild sqlite3"
   },
   "dependencies": {
     "@slack/bolt": "^3.17.1",
