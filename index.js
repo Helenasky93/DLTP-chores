@@ -671,8 +671,8 @@ app.action(/complete_\d+/, async ({ body, ack, say }) => {
   }
 });
 
-// Weekly assignment cron job - Every Monday at 8:00 PM PT
-cron.schedule('0 20 * * 1', async () => {
+// Weekly assignment cron job - Every Monday at 8:00 AM PT
+cron.schedule('0 8 * * 1', async () => {
   try {
     console.log('Running weekly chore assignment...');
     const assignments = await assignChores();
