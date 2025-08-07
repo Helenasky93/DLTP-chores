@@ -137,6 +137,16 @@ async function assignChores(isManual = false, weekOffset = 0) {
     // Skip chores that are manually triggered (weekday: -1)
     if (chore.due.weekday === -1) continue;
     
+    // Check if this chore is already completed this week
+    const alreadyCompletedThisWeek = existingAssignments.find(h => 
+      h.chore === chore.title && h.completed
+    );
+    
+    if (alreadyCompletedThisWeek) {
+      console.log(`Skipping ${chore.title} - already completed this week`);
+      continue;
+    }
+    
     let assignee = findNextAssignee(chore, history);
     
     // Try to avoid giving same person multiple chores in one assignment batch
@@ -783,31 +793,25 @@ async function postDailyProgressChart() {
     }
   ];
   
-  // Sort roommates by completion rate
-  const sortedRoommates = Object.values(stats).sort((a, b) => {
-    const aRate = a.total > 0 ? a.completed / a.total : 0;
-    const bRate = b.total > 0 ? b.completed / b.total : 0;
-    return bRate - aRate;
-  });
+  // Sort roommates alphabetically (no competition/ranking)
+  const sortedRoommates = Object.values(stats).sort((a, b) => a.name.localeCompare(b.name));
   
-  sortedRoommates.forEach((stat, index) => {
+  sortedRoommates.forEach((stat) => {
     const completionRate = stat.total > 0 ? Math.round((stat.completed / stat.total) * 100) : 0;
     const progressBar = createProgressBar(completionRate);
-    const medal = index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : index === 2 ? '🥉 ' : '';
     
     let choreList = '';
     if (stat.completedChores.length > 0) {
-      choreList = `\\n✅ ${stat.completedChores.slice(0, 3).join(', ')}`;
-      if (stat.completedChores.length > 3) {
-        choreList += ` +${stat.completedChores.length - 3} more`;
-      }
+      choreList = `\\n✅ ${stat.completedChores.join(', ')}`;
+    } else {
+      choreList = '\\n📝 No completed chores yet';
     }
     
     blocks.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `${medal}*${stat.name}*\\n${progressBar} ${completionRate}% (${stat.completed}/${stat.total})${choreList}`
+        text: `*${stat.name}*\\n${progressBar} ${stat.completed} completed${choreList}`
       }
     });
   });
@@ -908,19 +912,26 @@ async function initializeThisWeek() {
     const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
     const history = await loadHistory();
     
-    // Check if this week already has assignments
+    // Check existing assignments for this week
     const existingAssignments = history.filter(h => h.week === currentWeek);
+    const completedChores = existingAssignments.filter(h => h.completed);
+    const scheduledChores = config.chores.filter(c => c.due.weekday !== -1);
     
-    if (existingAssignments.length === 0) {
-      console.log('No assignments for this week - creating them now...');
-      const assignments = await assignChores(false);
-      
-      if (assignments.length > 0) {
-        await postAssignments(assignments, process.env.CHANNEL_ID);
-        console.log('✅ This week\'s assignments have been posted!');
-      }
+    console.log(`Week ${currentWeek} status: ${completedChores.length}/${scheduledChores.length} chores completed`);
+    
+    if (completedChores.length >= scheduledChores.length) {
+      console.log('✅ All scheduled chores for this week are already completed!');
+      return;
+    }
+    
+    // Try to assign remaining chores
+    const assignments = await assignChores(false);
+    
+    if (assignments.length > 0) {
+      await postAssignments(assignments, process.env.CHANNEL_ID);
+      console.log(`✅ Posted ${assignments.length} remaining assignments for this week!`);
     } else {
-      console.log(`This week already has ${existingAssignments.length} assignments.`);
+      console.log('✅ No additional chore assignments needed this week.');
     }
   } catch (error) {
     console.error('Error initializing this week:', error);
