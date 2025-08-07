@@ -106,5 +106,29 @@
     "completed": true,
     "completedBy": ["U0997GWTXUL"],
     "completedDate": "2024-08-06T12:55:00.000Z"
+  },
+  {
+    "month": "2024-M08",
+    "week": "2024-W32",
+    "chore": "Empty kitchen trash can and replace bag",
+    "assignedTo": ["U0997H3JB44"],
+    "assigneeNames": ["Kyle"],
+    "date": "2024-08-07T09:00:00.000Z",
+    "dueDate": null,
+    "completed": true,
+    "completedBy": ["U0997H3JB44"],
+    "completedDate": "2024-08-07T09:30:00.000Z"
+  },
+  {
+    "month": "2024-M08",
+    "week": "2024-W32",
+    "chore": "Empty kitchen trash can and replace bag",
+    "assignedTo": ["U0997GV2P5J"],
+    "assigneeNames": ["Jimmy"],
+    "date": "2024-08-07T10:00:00.000Z",
+    "dueDate": null,
+    "completed": true,
+    "completedBy": ["U0997GV2P5J"],
+    "completedDate": "2024-08-07T10:15:00.000Z"
   }
 ]

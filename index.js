@@ -939,8 +939,18 @@ async function initializeThisWeek() {
   console.log(`Channel ID: ${process.env.CHANNEL_ID}`);
   console.log(`Roommates: ${config.roommates.map(r => r.name).join(', ')}`);
   
-  // Initialize this week's assignments
+  // Initialize this week's assignments and post current progress
   setTimeout(async () => {
     await initializeThisWeek();
+    // Post initial progress chart since we're starting mid-week
+    setTimeout(async () => {
+      try {
+        console.log('Posting initial progress chart...');
+        await postDailyProgressChart();
+        console.log('✅ Initial progress chart posted!');
+      } catch (error) {
+        console.error('Error posting initial progress chart:', error);
+      }
+    }, 3000); // Wait another 3 seconds after assignments
   }, 2000); // Wait 2 seconds for everything to be ready
 })();
