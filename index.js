@@ -88,13 +88,14 @@ async function initializeSeedData() {
       "month": "2024-M08",
       "week": "2024-W32",
       "chore": "Take in trash bins to the yard",
-      "assignedTo": ["U0997GV2P5J"],
-      "assigneeNames": ["Jimmy"],
+      "assignedTo": ["U0997GV2P5J", "U0997H0KM9A"],
+      "assigneeNames": ["Jimmy", "Max"],
       "date": "2024-08-06T19:30:00.000Z",
       "dueDate": "2024-08-06T20:00:00.000Z",
       "completed": true,
-      "completedBy": ["U0997GV2P5J"],
-      "completedDate": "2024-08-06T19:50:00.000Z"
+      "completedBy": ["U0997GV2P5J", "U0997H0KM9A"],
+      "completedDate": "2024-08-06T19:50:00.000Z",
+      "isShared": true
     },
     {
       "month": "2024-M08",
@@ -112,49 +113,27 @@ async function initializeSeedData() {
       "month": "2024-M08",
       "week": "2024-W31",
       "chore": "Vacuum downstairs",
-      "assignedTo": ["U0997H3JB44"],
-      "assigneeNames": ["Kyle"],
+      "assignedTo": ["U0997H3JB44", "U0997GWTXUL"],
+      "assigneeNames": ["Kyle", "Zo"],
       "date": "2024-08-03T11:30:00.000Z",
       "dueDate": "2024-08-03T12:00:00.000Z",
       "completed": true,
-      "completedBy": ["U0997H3JB44"],
-      "completedDate": "2024-08-03T11:45:00.000Z"
+      "completedBy": ["U0997H3JB44", "U0997GWTXUL"],
+      "completedDate": "2024-08-03T11:45:00.000Z",
+      "isShared": true
     },
     {
       "month": "2024-M08",
       "week": "2024-W31",
       "chore": "Vacuum upstairs",
-      "assignedTo": ["U0997H3JB44"],
-      "assigneeNames": ["Kyle"],
+      "assignedTo": ["U0997H3JB44", "U0997GWTXUL"],
+      "assigneeNames": ["Kyle", "Zo"],
       "date": "2024-08-03T12:30:00.000Z",
       "dueDate": "2024-08-03T13:00:00.000Z",
       "completed": true,
-      "completedBy": ["U0997H3JB44"],
-      "completedDate": "2024-08-03T12:45:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Vacuum downstairs",
-      "assignedTo": ["U0997GWTXUL"],
-      "assigneeNames": ["Zo"],
-      "date": "2024-08-06T11:30:00.000Z",
-      "dueDate": "2024-08-06T12:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997GWTXUL"],
-      "completedDate": "2024-08-06T11:50:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Vacuum upstairs",
-      "assignedTo": ["U0997GWTXUL"],
-      "assigneeNames": ["Zo"],
-      "date": "2024-08-06T12:30:00.000Z",
-      "dueDate": "2024-08-06T13:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997GWTXUL"],
-      "completedDate": "2024-08-06T12:55:00.000Z"
+      "completedBy": ["U0997H3JB44", "U0997GWTXUL"],
+      "completedDate": "2024-08-03T12:45:00.000Z",
+      "isShared": true
     },
     {
       "month": "2024-M08",
@@ -204,19 +183,15 @@ function findNextAssignee(chore, history) {
   roommates.forEach(r => monthlyCounts[r.slackId] = 0);
   
   monthHistory.forEach(h => {
-    if (Array.isArray(h.assignedTo)) {
-      // Handle multiple assignees
-      h.assignedTo.forEach(assigneeId => {
-        if (monthlyCounts[assigneeId] !== undefined) {
-          monthlyCounts[assigneeId]++;
-        }
-      });
-    } else {
-      // Handle legacy single assignee format
-      if (monthlyCounts[h.assignedTo] !== undefined) {
-        monthlyCounts[h.assignedTo]++;
+    const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    const isShared = h.isShared || assigneeIds.length > 1;
+    const creditPerPerson = isShared ? 0.5 : 1;
+    
+    assigneeIds.forEach(assigneeId => {
+      if (monthlyCounts[assigneeId] !== undefined) {
+        monthlyCounts[assigneeId] += creditPerPerson;
       }
-    }
+    });
   });
   
   // Find person with fewest total monthly assignments
@@ -239,17 +214,15 @@ function findMultipleAssignees(chore, history, numAssignees = 2) {
   roommates.forEach(r => monthlyCounts[r.slackId] = 0);
   
   monthHistory.forEach(h => {
-    if (Array.isArray(h.assignedTo)) {
-      h.assignedTo.forEach(assigneeId => {
-        if (monthlyCounts[assigneeId] !== undefined) {
-          monthlyCounts[assigneeId]++;
-        }
-      });
-    } else {
-      if (monthlyCounts[h.assignedTo] !== undefined) {
-        monthlyCounts[h.assignedTo]++;
+    const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    const isShared = h.isShared || assigneeIds.length > 1;
+    const creditPerPerson = isShared ? 0.5 : 1;
+    
+    assigneeIds.forEach(assigneeId => {
+      if (monthlyCounts[assigneeId] !== undefined) {
+        monthlyCounts[assigneeId] += creditPerPerson;
       }
-    }
+    });
   });
   
   // Sort roommates by assignment count (ascending)
@@ -917,14 +890,18 @@ async function postSpecificMonthChart(monthFilter) {
   
   monthHistory.forEach(h => {
     const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    const isShared = h.isShared || assigneeIds.length > 1;
+    const creditPerPerson = isShared ? 0.5 : 1;
+    
     assigneeIds.forEach(assigneeId => {
       if (stats[assigneeId]) {
-        stats[assigneeId].total++;
+        stats[assigneeId].total += creditPerPerson;
         if (h.completed) {
-          stats[assigneeId].completed++;
-          stats[assigneeId].completedChores.push(h.chore);
+          stats[assigneeId].completed += creditPerPerson;
+          const choreDisplay = isShared ? `${h.chore} (shared)` : h.chore;
+          stats[assigneeId].completedChores.push(choreDisplay);
         } else {
-          stats[assigneeId].pending++;
+          stats[assigneeId].pending += creditPerPerson;
         }
       }
     });
@@ -960,11 +937,14 @@ async function postSpecificMonthChart(monthFilter) {
       choreList = '\\n📝 No completed chores yet';
     }
     
+    // Format the completion count nicely (show .5 as 0.5, whole numbers without decimals)
+    const completedDisplay = stat.completed % 1 === 0 ? stat.completed.toString() : stat.completed.toFixed(1);
+    
     blocks.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${stat.name}*\\n${progressBar} ${stat.completed} completed${choreList}`
+        text: `*${stat.name}*\\n${progressBar} ${completedDisplay} completed${choreList}`
       }
     });
   });
@@ -1016,14 +996,18 @@ async function postDailyProgressChart() {
   
   monthHistory.forEach(h => {
     const assigneeIds = Array.isArray(h.assignedTo) ? h.assignedTo : [h.assignedTo];
+    const isShared = h.isShared || assigneeIds.length > 1;
+    const creditPerPerson = isShared ? 0.5 : 1;
+    
     assigneeIds.forEach(assigneeId => {
       if (stats[assigneeId]) {
-        stats[assigneeId].total++;
+        stats[assigneeId].total += creditPerPerson;
         if (h.completed) {
-          stats[assigneeId].completed++;
-          stats[assigneeId].completedChores.push(h.chore);
+          stats[assigneeId].completed += creditPerPerson;
+          const choreDisplay = isShared ? `${h.chore} (shared)` : h.chore;
+          stats[assigneeId].completedChores.push(choreDisplay);
         } else {
-          stats[assigneeId].pending++;
+          stats[assigneeId].pending += creditPerPerson;
         }
       }
     });
@@ -1061,11 +1045,14 @@ async function postDailyProgressChart() {
       choreList = '\\n📝 No completed chores yet';
     }
     
+    // Format the completion count nicely (show .5 as 0.5, whole numbers without decimals)
+    const completedDisplay = stat.completed % 1 === 0 ? stat.completed.toString() : stat.completed.toFixed(1);
+    
     blocks.push({
       type: 'section',
       text: {
         type: 'mrkdwn',
-        text: `*${stat.name}*\\n${progressBar} ${stat.completed} completed${choreList}`
+        text: `*${stat.name}*\\n${progressBar} ${completedDisplay} completed${choreList}`
       }
     });
   });
