@@ -6,6 +6,8 @@ import cron from 'node-cron';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+import sqlite3 from 'sqlite3';
+import { promisify } from 'util';
 
 dotenv.config();
 dayjs.extend(utc);
@@ -18,11 +20,75 @@ const app = new App({
   processBeforeResponse: true
 });
 
-const DATA_FILE = './data/history.json';
 const CONFIG_FILE = './config.json';
 const TZ = process.env.TZ || 'America/Los_Angeles';
+const DB_PATH = process.env.DATABASE_URL || './chores.db';
 
 let config = {};
+let db;
+
+// Initialize SQLite database
+async function initDatabase() {
+  return new Promise((resolve, reject) => {
+    db = new sqlite3.Database(DB_PATH, (err) => {
+      if (err) {
+        console.error('Error opening database:', err);
+        reject(err);
+        return;
+      }
+      console.log('✅ Connected to SQLite database');
+      
+      // Create tables
+      db.serialize(() => {
+        db.run(`
+          CREATE TABLE IF NOT EXISTS chore_assignments (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            month TEXT NOT NULL,
+            week TEXT NOT NULL,
+            chore TEXT NOT NULL,
+            assigned_to TEXT NOT NULL,
+            assignee_names TEXT NOT NULL,
+            date TEXT NOT NULL,
+            due_date TEXT,
+            completed BOOLEAN DEFAULT FALSE,
+            completed_by TEXT DEFAULT '',
+            completed_date TEXT,
+            is_shared BOOLEAN DEFAULT FALSE,
+            triggered_by TEXT,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          )
+        `, (err) => {
+          if (err) {
+            console.error('Error creating table:', err);
+            reject(err);
+          } else {
+            console.log('✅ Database table ready');
+            resolve();
+          }
+        });
+      });
+    });
+  });
+}
+
+// Promisify database methods
+const dbAll = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.all(query, params, (err, rows) => {
+      if (err) reject(err);
+      else resolve(rows);
+    });
+  });
+};
+
+const dbRun = (query, params = []) => {
+  return new Promise((resolve, reject) => {
+    db.run(query, params, function(err) {
+      if (err) reject(err);
+      else resolve({ id: this.lastID, changes: this.changes });
+    });
+  });
+};
 
 async function loadConfig() {
   try {
@@ -35,140 +101,148 @@ async function loadConfig() {
 
 async function loadHistory() {
   try {
-    await fs.ensureDir('./data');
-    const history = await fs.readJson(DATA_FILE);
-    return Array.isArray(history) ? history : [];
+    const rows = await dbAll('SELECT * FROM chore_assignments ORDER BY created_at DESC');
+    
+    // Convert database rows to the format expected by existing code
+    return rows.map(row => ({
+      id: row.id,
+      month: row.month,
+      week: row.week,
+      chore: row.chore,
+      assignedTo: JSON.parse(row.assigned_to),
+      assigneeNames: JSON.parse(row.assignee_names),
+      date: row.date,
+      dueDate: row.due_date,
+      completed: Boolean(row.completed),
+      completedBy: row.completed_by ? JSON.parse(row.completed_by) : [],
+      completedDate: row.completed_date,
+      isShared: Boolean(row.is_shared),
+      triggeredBy: row.triggered_by
+    }));
   } catch (error) {
-    // File doesn't exist, initialize with seed data
-    console.log('No history file found, initializing with seed data...');
-    await initializeSeedData();
-    return await fs.readJson(DATA_FILE);
+    console.error('Error loading history from database:', error);
+    return [];
   }
 }
 
 async function initializeSeedData() {
-  const seedData = [
-    {
-      "month": "2024-M08",
-      "week": "2024-W31",
-      "chore": "Empty kitchen trash can and replace bag",
-      "assignedTo": ["U0997H3JB44"],
-      "assigneeNames": ["Kyle"],
-      "date": "2024-08-01T10:00:00.000Z",
-      "dueDate": null,
-      "completed": true,
-      "completedBy": ["U0997H3JB44"],
-      "completedDate": "2024-08-01T10:30:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W31",
-      "chore": "Empty kitchen trash can and replace bag",
-      "assignedTo": ["U0997GV2P5J"],
-      "assigneeNames": ["Jimmy"],
-      "date": "2024-08-03T14:00:00.000Z",
-      "dueDate": null,
-      "completed": true,
-      "completedBy": ["U0997GV2P5J"],
-      "completedDate": "2024-08-03T14:15:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Take out trash bins to the front",
-      "assignedTo": ["U0997H3JB44"],
-      "assigneeNames": ["Kyle"],
-      "date": "2024-08-05T19:30:00.000Z",
-      "dueDate": "2024-08-05T20:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997H3JB44"],
-      "completedDate": "2024-08-05T19:45:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Take in trash bins to the yard",
-      "assignedTo": ["U0997GV2P5J", "U0997H0KM9A"],
-      "assigneeNames": ["Jimmy", "Max"],
-      "date": "2024-08-06T19:30:00.000Z",
-      "dueDate": "2024-08-06T20:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997GV2P5J", "U0997H0KM9A"],
-      "completedDate": "2024-08-06T19:50:00.000Z",
-      "isShared": true
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W31",
-      "chore": "Take in trash bins to the yard",
-      "assignedTo": ["U0997H0KM9A"],
-      "assigneeNames": ["Max"],
-      "date": "2024-08-02T19:30:00.000Z",
-      "dueDate": "2024-08-02T20:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997H0KM9A"],
-      "completedDate": "2024-08-02T20:10:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W31",
-      "chore": "Vacuum downstairs",
-      "assignedTo": ["U0997H3JB44", "U0997GWTXUL"],
-      "assigneeNames": ["Kyle", "Zo"],
-      "date": "2024-08-03T11:30:00.000Z",
-      "dueDate": "2024-08-03T12:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997H3JB44", "U0997GWTXUL"],
-      "completedDate": "2024-08-03T11:45:00.000Z",
-      "isShared": true
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W31",
-      "chore": "Vacuum upstairs",
-      "assignedTo": ["U0997H3JB44", "U0997GWTXUL"],
-      "assigneeNames": ["Kyle", "Zo"],
-      "date": "2024-08-03T12:30:00.000Z",
-      "dueDate": "2024-08-03T13:00:00.000Z",
-      "completed": true,
-      "completedBy": ["U0997H3JB44", "U0997GWTXUL"],
-      "completedDate": "2024-08-03T12:45:00.000Z",
-      "isShared": true
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Empty kitchen trash can and replace bag",
-      "assignedTo": ["U0997H3JB44"],
-      "assigneeNames": ["Kyle"],
-      "date": "2024-08-07T09:00:00.000Z",
-      "dueDate": null,
-      "completed": true,
-      "completedBy": ["U0997H3JB44"],
-      "completedDate": "2024-08-07T09:30:00.000Z"
-    },
-    {
-      "month": "2024-M08",
-      "week": "2024-W32",
-      "chore": "Empty kitchen trash can and replace bag",
-      "assignedTo": ["U0997GV2P5J"],
-      "assigneeNames": ["Jimmy"],
-      "date": "2024-08-07T10:00:00.000Z",
-      "dueDate": null,
-      "completed": true,
-      "completedBy": ["U0997GV2P5J"],
-      "completedDate": "2024-08-07T10:15:00.000Z"
+  try {
+    // Check if data already exists
+    const existingData = await dbAll('SELECT COUNT(*) as count FROM chore_assignments');
+    if (existingData[0].count > 0) {
+      console.log('Database already has data, skipping seed initialization');
+      return;
     }
-  ];
-  
-  await fs.ensureDir('./data');
-  await fs.writeJson(DATA_FILE, seedData, { spaces: 2 });
-  console.log('✅ Seed data initialized with', seedData.length, 'historical entries');
+
+    const seedData = [
+      {
+        month: "2024-M08", week: "2024-W31", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-01T10:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-01T10:30:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W31", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2024-08-03T14:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2024-08-03T14:15:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W32", chore: "Take out trash bins to the front",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-05T19:30:00.000Z",
+        dueDate: "2024-08-05T20:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-05T19:45:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W32", chore: "Take in trash bins to the yard",
+        assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2024-08-06T19:30:00.000Z",
+        dueDate: "2024-08-06T20:00:00.000Z", completed: true, completedBy: ["U0997GV2P5J", "U0997H0KM9A"], completedDate: "2024-08-06T19:50:00.000Z", isShared: true
+      },
+      {
+        month: "2024-M08", week: "2024-W31", chore: "Vacuum downstairs",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-03T11:30:00.000Z",
+        dueDate: "2024-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-03T11:45:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W31", chore: "Vacuum upstairs",
+        assignedTo: ["U0997GWTXUL"], assigneeNames: ["Zo"], date: "2024-08-03T12:30:00.000Z",
+        dueDate: "2024-08-03T13:00:00.000Z", completed: true, completedBy: ["U0997GWTXUL"], completedDate: "2024-08-03T12:45:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W32", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2024-08-07T09:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2024-08-07T09:30:00.000Z", isShared: false
+      },
+      {
+        month: "2024-M08", week: "2024-W32", chore: "Empty kitchen trash can and replace bag",
+        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2024-08-07T10:00:00.000Z",
+        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2024-08-07T10:15:00.000Z", isShared: false
+      }
+    ];
+
+    for (const assignment of seedData) {
+      await saveAssignment(assignment);
+    }
+    
+    console.log('✅ Database initialized with', seedData.length, 'historical entries');
+  } catch (error) {
+    console.error('Error initializing seed data:', error);
+  }
 }
 
-async function saveHistory(history) {
-  await fs.ensureDir('./data');
-  await fs.writeJson(DATA_FILE, history, { spaces: 2 });
+async function saveAssignment(assignment) {
+  try {
+    await dbRun(`
+      INSERT INTO chore_assignments (
+        month, week, chore, assigned_to, assignee_names, date, due_date, 
+        completed, completed_by, completed_date, is_shared, triggered_by
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      assignment.month,
+      assignment.week,
+      assignment.chore,
+      JSON.stringify(assignment.assignedTo),
+      JSON.stringify(assignment.assigneeNames),
+      assignment.date,
+      assignment.dueDate,
+      assignment.completed ? 1 : 0,
+      JSON.stringify(assignment.completedBy || []),
+      assignment.completedDate,
+      assignment.isShared ? 1 : 0,
+      assignment.triggeredBy
+    ]);
+  } catch (error) {
+    console.error('Error saving assignment:', error);
+    throw error;
+  }
+}
+
+async function updateAssignment(id, updates) {
+  try {
+    const setParts = [];
+    const values = [];
+    
+    Object.keys(updates).forEach(key => {
+      if (key === 'completedBy' || key === 'assignedTo' || key === 'assigneeNames') {
+        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        values.push(JSON.stringify(updates[key]));
+      } else if (key === 'completed' || key === 'isShared') {
+        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        values.push(updates[key] ? 1 : 0);
+      } else {
+        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        values.push(updates[key]);
+      }
+    });
+    
+    values.push(id);
+    
+    await dbRun(`
+      UPDATE chore_assignments 
+      SET ${setParts.join(', ')}
+      WHERE id = ?
+    `, values);
+  } catch (error) {
+    console.error('Error updating assignment:', error);
+    throw error;
+  }
 }
 
 function findNextAssignee(chore, history) {
@@ -288,10 +362,9 @@ async function assignChores(isManual = false, weekOffset = 0) {
     };
     
     assignments.push(assignment);
-    history.push(assignment);
+    await saveAssignment(assignment);
   }
   
-  await saveHistory(history);
   return assignments;
 }
 
@@ -480,8 +553,7 @@ async function handleChoreAssignment(choreType, assignees, triggeredBy, respond)
     triggeredBy: triggeredBy
   };
   
-  history.push(assignment);
-  await saveHistory(history);
+  await saveAssignment(assignment);
   
   const emoji = choreType === 'trash' ? '🗑️' : '🍽️';
   const assigneeText = assigneeIds.map(id => `<@${id}>`).join(' & ');
@@ -512,6 +584,28 @@ async function handleChoreAssignment(choreType, assignees, triggeredBy, respond)
     }
   }
 }
+
+// Standalone chart command
+app.command('/chart', async ({ command, ack, respond }) => {
+  await ack();
+  
+  setImmediate(async () => {
+    try {
+      const text = command.text.trim().toLowerCase();
+      
+      if (text === 'august' || text === 'aug') {
+        await postSpecificMonthChart('2024-M08');
+        await respond('📊 August 2024 chart posted!');
+      } else {
+        await postDailyProgressChart();
+        await respond('📊 Progress chart posted!');
+      }
+    } catch (error) {
+      console.error('Error handling /chart command:', error);
+      await respond('❌ Sorry, something went wrong!');
+    }
+  });
+});
 
 // Handle solo task button click
 app.action('solo_task', async ({ body, ack, respond }) => {
@@ -703,18 +797,24 @@ app.message('done', async ({ message, say }) => {
     if (!Array.isArray(assignment.completedBy)) {
       assignment.completedBy = [];
     }
-    assignment.completedBy.push(message.user);
+    if (!assignment.completedBy.includes(message.user)) {
+      assignment.completedBy.push(message.user);
+    }
     
     // Check if all assignees have marked it complete
     const allAssignees = Array.isArray(assignment.assignedTo) ? assignment.assignedTo : [assignment.assignedTo];
     const allComplete = allAssignees.every(assigneeId => assignment.completedBy.includes(assigneeId));
     
+    const updates = {
+      completedBy: assignment.completedBy
+    };
+    
     if (allComplete) {
-      assignment.completed = true;
-      assignment.completedDate = dayjs().tz(TZ).toISOString();
+      updates.completed = true;
+      updates.completedDate = dayjs().tz(TZ).toISOString();
     }
     
-    await saveHistory(history);
+    await updateAssignment(assignment.id, updates);
     
     if (allComplete) {
       await say(`✅ Great job completing: *${assignment.chore}*!`);
@@ -776,18 +876,24 @@ app.action(/complete_\d+/, async ({ body, ack, say }) => {
     if (!Array.isArray(assignment.completedBy)) {
       assignment.completedBy = [];
     }
-    assignment.completedBy.push(body.user.id);
+    if (!assignment.completedBy.includes(body.user.id)) {
+      assignment.completedBy.push(body.user.id);
+    }
     
     // Check if all assignees have marked it complete
     const allAssignees = Array.isArray(assignment.assignedTo) ? assignment.assignedTo : [assignment.assignedTo];
     const allComplete = allAssignees.every(assigneeId => assignment.completedBy.includes(assigneeId));
     
+    const updates = {
+      completedBy: assignment.completedBy
+    };
+    
     if (allComplete) {
-      assignment.completed = true;
-      assignment.completedDate = dayjs().tz(TZ).toISOString();
+      updates.completed = true;
+      updates.completedDate = dayjs().tz(TZ).toISOString();
     }
     
-    await saveHistory(history);
+    await updateAssignment(assignment.id, updates);
     
     if (allComplete) {
       await say(`✅ Great job completing: *${assignment.chore}*!`);
@@ -1181,28 +1287,35 @@ async function initializeThisWeek() {
 
 // Start the app
 (async () => {
-  await loadConfig();
-  
-  const port = process.env.PORT || 3000;
-  await app.start(port);
-  
-  console.log(`⚡️ Slack ChoreBot is running on port ${port}!`);
-  console.log(`Timezone: ${TZ}`);
-  console.log(`Channel ID: ${process.env.CHANNEL_ID}`);
-  console.log(`Roommates: ${config.roommates.map(r => r.name).join(', ')}`);
-  
-  // Initialize this week's assignments and post current progress
-  setTimeout(async () => {
-    await initializeThisWeek();
-    // Post initial progress chart since we're starting mid-week
+  try {
+    await initDatabase();
+    await loadConfig();
+    await initializeSeedData();
+    
+    const port = process.env.PORT || 3000;
+    await app.start(port);
+    
+    console.log(`⚡️ Slack ChoreBot is running on port ${port}!`);
+    console.log(`Timezone: ${TZ}`);
+    console.log(`Channel ID: ${process.env.CHANNEL_ID}`);
+    console.log(`Roommates: ${config.roommates.map(r => r.name).join(', ')}`);
+    
+    // Initialize this week's assignments and post current progress
     setTimeout(async () => {
-      try {
-        console.log('Posting initial progress chart...');
-        await postDailyProgressChart();
-        console.log('✅ Initial progress chart posted!');
-      } catch (error) {
-        console.error('Error posting initial progress chart:', error);
-      }
-    }, 3000); // Wait another 3 seconds after assignments
-  }, 2000); // Wait 2 seconds for everything to be ready
+      await initializeThisWeek();
+      // Post initial progress chart since we're starting mid-week
+      setTimeout(async () => {
+        try {
+          console.log('Posting initial progress chart...');
+          await postDailyProgressChart();
+          console.log('✅ Initial progress chart posted!');
+        } catch (error) {
+          console.error('Error posting initial progress chart:', error);
+        }
+      }, 3000);
+    }, 2000);
+  } catch (error) {
+    console.error('Failed to start app:', error);
+    process.exit(1);
+  }
 })();

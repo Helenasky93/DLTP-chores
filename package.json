@@ -12,7 +12,8 @@
     "dayjs": "^1.11.11",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
-    "node-cron": "^3.0.3"
+    "node-cron": "^3.0.3",
+    "sqlite3": "^5.1.6"
   },
   "engines": {
     "node": ">=18.0.0"
