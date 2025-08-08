@@ -331,6 +331,7 @@ async function assignChores(isManual = false, weekOffset = 0) {
   
   // Get all scheduled chores (not manual ones)
   const scheduledChores = config.chores.filter(c => c.due.weekday !== -1);
+  console.log('DEBUG: Scheduled chores (weekday !== -1):', scheduledChores.map(c => `${c.title} (weekday: ${c.due.weekday})`));
   
   // Check if all scheduled chores are already completed
   const completedScheduledChores = scheduledChores.filter(chore => 
@@ -339,8 +340,11 @@ async function assignChores(isManual = false, weekOffset = 0) {
   
   if (completedScheduledChores.length >= scheduledChores.length) {
     console.log('✅ All scheduled chores for this week are already completed!');
+    console.log('DEBUG: assignChores returning empty array - should show celebratory message');
     return [];
   }
+  
+  console.log('DEBUG: assignChores continuing - some chores not completed yet');
   
   const assignments = [];
   const assignedPeopleThisWeek = new Set();
@@ -1287,6 +1291,9 @@ async function initializeThisWeek() {
     const scheduledChores = config.chores.filter(c => c.due.weekday !== -1);
     
     console.log(`Week ${currentWeek} status: ${existingAssignments.length}/${scheduledChores.length} chores assigned, ${completedChores.length} completed`);
+    console.log('Scheduled chores:', scheduledChores.map(c => c.title));
+    console.log('Existing assignments:', existingAssignments.map(a => `${a.chore} (completed: ${a.completed})`));
+    console.log('Completed chores:', completedChores.map(c => c.chore));
     
     if (existingAssignments.length >= scheduledChores.length) {
       console.log('✅ All scheduled chores for this week are already assigned!');
@@ -1295,6 +1302,9 @@ async function initializeThisWeek() {
       const completedScheduledChores = scheduledChores.filter(chore => 
         completedChores.some(h => h.chore === chore.title)
       );
+      
+      console.log('Completed scheduled chores:', completedScheduledChores.map(c => c.title));
+      console.log(`Completion check: ${completedScheduledChores.length} >= ${scheduledChores.length}`);
       
       if (completedScheduledChores.length >= scheduledChores.length) {
         // Post celebratory message
