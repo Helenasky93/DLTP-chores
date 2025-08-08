@@ -1283,17 +1283,8 @@ async function initializeThisWeek() {
     
     if (existingAssignments.length >= scheduledChores.length) {
       console.log('✅ All scheduled chores for this week are already assigned!');
-      return;
-    }
-    
-    // Try to assign remaining chores
-    const assignments = await assignChores(false);
-    
-    if (assignments.length > 0) {
-      await postAssignments(assignments, process.env.CHANNEL_ID);
-      console.log(`✅ Posted ${assignments.length} remaining assignments for this week!`);
-    } else {
-      // Check if all scheduled chores are completed for celebration message
+      
+      // Check if all scheduled chores are also completed for celebration message
       const completedScheduledChores = scheduledChores.filter(chore => 
         completedChores.some(h => h.chore === chore.title)
       );
@@ -1328,9 +1319,18 @@ async function initializeThisWeek() {
         } catch (error) {
           console.error('Error posting celebratory message:', error);
         }
-      } else {
-        console.log('✅ No additional chore assignments needed this week.');
       }
+      return;
+    }
+    
+    // Try to assign remaining chores
+    const assignments = await assignChores(false);
+    
+    if (assignments.length > 0) {
+      await postAssignments(assignments, process.env.CHANNEL_ID);
+      console.log(`✅ Posted ${assignments.length} remaining assignments for this week!`);
+    } else {
+      console.log('✅ No additional chore assignments needed this week.');
     }
   } catch (error) {
     console.error('Error initializing this week:', error);
