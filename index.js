@@ -211,8 +211,8 @@ async function saveAssignment(assignment) {
   try {
     await dbRun(`
       INSERT INTO chore_assignments (
-        month, week, chore, assigned_to, assignee_names, date, due_date, 
-        completed, completed_by, completed_date, is_shared, triggered_by
+        month, week, chore, assignedTo, assigneeNames, date, dueDate, 
+        completed, completedBy, completedDate, isShared, creditPerPerson
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       assignment.month,
@@ -226,7 +226,7 @@ async function saveAssignment(assignment) {
       JSON.stringify(assignment.completedBy || []),
       assignment.completedDate,
       assignment.isShared ? 1 : 0,
-      assignment.triggeredBy
+      assignment.creditPerPerson || (assignment.isShared ? 0.5 : 1.0)
     ]);
   } catch (error) {
     console.error('Error saving assignment:', error);
@@ -241,13 +241,13 @@ async function updateAssignment(id, updates) {
     
     Object.keys(updates).forEach(key => {
       if (key === 'completedBy' || key === 'assignedTo' || key === 'assigneeNames') {
-        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        setParts.push(`${key} = ?`);
         values.push(JSON.stringify(updates[key]));
       } else if (key === 'completed' || key === 'isShared') {
-        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        setParts.push(`${key} = ?`);
         values.push(updates[key] ? 1 : 0);
       } else {
-        setParts.push(`${key.replace(/([A-Z])/g, '_$1').toLowerCase()} = ?`);
+        setParts.push(`${key} = ?`);
         values.push(updates[key]);
       }
     });
