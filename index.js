@@ -6,12 +6,14 @@ import cron from 'node-cron';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc.js';
 import timezone from 'dayjs/plugin/timezone.js';
+import weekOfYear from 'dayjs/plugin/weekOfYear.js';
 import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 
 dotenv.config();
 dayjs.extend(utc);
 dayjs.extend(timezone);
+dayjs.extend(weekOfYear);
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -22,6 +24,11 @@ const app = new App({
 
 const CONFIG_FILE = './config.json';
 const TZ = process.env.TZ || 'America/Los_Angeles';
+
+// Helper function to format week properly
+function formatWeek(date) {
+  return date.format('YYYY') + '-W' + String(date.week()).padStart(2, '0');
+}
 const DB_PATH = process.env.DATABASE_URL || './chores.db';
 
 let config = {};
@@ -311,7 +318,7 @@ function findMultipleAssignees(chore, history, numAssignees = 2) {
 async function assignChores(isManual = false, weekOffset = 0) {
   const history = await loadHistory();
   const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
-  const currentWeek = dayjs().tz(TZ).add(weekOffset, 'week').format('YYYY-[W]WW');
+  const currentWeek = formatWeek(dayjs().tz(TZ).add(weekOffset, 'week'));
   
   // Get ALL assignments for this week (completed and incomplete)
   const allWeekAssignments = history.filter(h => h.week === currentWeek);
@@ -550,7 +557,7 @@ async function handleChoreAssignment(choreType, assignees, triggeredBy, respond)
   }
   
   const currentMonth = dayjs().tz(TZ).format('YYYY-[M]MM');
-  const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
+  const currentWeek = formatWeek(dayjs().tz(TZ));
   const assigneeIds = assignees.map(a => a.slackId);
   const assigneeNames = assignees.map(a => a.name);
   
@@ -785,7 +792,7 @@ app.message('done', async ({ message, say }) => {
   if (message.channel_type !== 'im') return;
   
   const history = await loadHistory();
-  const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
+  const currentWeek = formatWeek(dayjs().tz(TZ));
   
   // Find user's incomplete assignments this week
   const userAssignments = history.filter(h => {
@@ -1271,7 +1278,7 @@ app.error((error) => {
 // Initialize this week's assignments (since it's mid-week)
 async function initializeThisWeek() {
   try {
-    const currentWeek = dayjs().tz(TZ).format('YYYY-[W]WW');
+    const currentWeek = formatWeek(dayjs().tz(TZ));
     const history = await loadHistory();
     
     // Check existing assignments for this week
