@@ -108,24 +108,47 @@ async function loadConfig() {
 
 async function loadHistory() {
   try {
-    const rows = await dbAll('SELECT * FROM chore_assignments ORDER BY created_at DESC');
+    const rows = await dbAll('SELECT * FROM chore_assignments ORDER BY date DESC');
     
     // Convert database rows to the format expected by existing code
-    return rows.map(row => ({
-      id: row.id,
-      month: row.month,
-      week: row.week,
-      chore: row.chore,
-      assignedTo: JSON.parse(row.assigned_to),
-      assigneeNames: JSON.parse(row.assignee_names),
-      date: row.date,
-      dueDate: row.due_date,
-      completed: Boolean(row.completed),
-      completedBy: row.completed_by ? JSON.parse(row.completed_by) : [],
-      completedDate: row.completed_date,
-      isShared: Boolean(row.is_shared),
-      triggeredBy: row.triggered_by
-    }));
+    return rows.map(row => {
+      // Handle both JSON array format and single string format for compatibility
+      let assignedTo, assigneeNames, completedBy;
+      
+      try {
+        assignedTo = JSON.parse(row.assignedTo);
+      } catch {
+        assignedTo = [row.assignedTo]; // Single string, convert to array
+      }
+      
+      try {
+        assigneeNames = JSON.parse(row.assigneeNames);  
+      } catch {
+        assigneeNames = [row.assigneeNames]; // Single string, convert to array
+      }
+      
+      try {
+        completedBy = row.completedBy ? JSON.parse(row.completedBy) : [];
+      } catch {
+        completedBy = row.completedBy ? [row.completedBy] : [];
+      }
+      
+      return {
+        id: row.id,
+        month: row.month,
+        week: row.week,
+        chore: row.chore,
+        assignedTo,
+        assigneeNames,
+        date: row.date,
+        dueDate: row.dueDate,
+        completed: Boolean(row.completed),
+        completedBy,
+        completedDate: row.completedDate,
+        isShared: Boolean(row.isShared),
+        creditPerPerson: row.creditPerPerson || 1.0
+      };
+    });
   } catch (error) {
     console.error('Error loading history from database:', error);
     return [];
@@ -142,34 +165,19 @@ async function initializeSeedData() {
     }
 
     const seedData = [
-      // Kyle: 4 points total (2 trash + 1 vacuum + 1 take out bins)
-      {
-        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-01T10:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-01T10:30:00.000Z", isShared: false
-      },
-      {
-        month: "2025-M08", week: "2025-W32", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-07T09:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-07T09:30:00.000Z", isShared: false
-      },
+      // Kyle: 2 points total (1 vacuum + 1 take out bins)
       {
         month: "2025-M08", week: "2025-W31", chore: "Vacuum downstairs",
         assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-03T11:30:00.000Z",
         dueDate: "2025-08-03T12:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-03T11:45:00.000Z", isShared: false
-      },
-      
-      // Jimmy: 1.5 points total (1 trash + 0.5 shared take in bins)
-      {
-        month: "2025-M08", week: "2025-W31", chore: "Empty kitchen trash can and replace bag",
-        assignedTo: ["U0997GV2P5J"], assigneeNames: ["Jimmy"], date: "2025-08-03T14:00:00.000Z",
-        dueDate: null, completed: true, completedBy: ["U0997GV2P5J"], completedDate: "2025-08-03T14:15:00.000Z", isShared: false
       },
       {
         month: "2025-M08", week: "2025-W32", chore: "Take out trash bins to the front",
         assignedTo: ["U0997H3JB44"], assigneeNames: ["Kyle"], date: "2025-08-05T19:30:00.000Z",
         dueDate: "2025-08-05T20:00:00.000Z", completed: true, completedBy: ["U0997H3JB44"], completedDate: "2025-08-05T19:45:00.000Z", isShared: false
       },
+      
+      // Jimmy: 0.5 points total (0.5 shared take in bins)
       {
         month: "2025-M08", week: "2025-W32", chore: "Take in trash bins to the yard",
         assignedTo: ["U0997GV2P5J", "U0997H0KM9A"], assigneeNames: ["Jimmy", "Max"], date: "2025-08-06T19:30:00.000Z",
